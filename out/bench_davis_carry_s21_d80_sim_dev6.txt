@@ -1,0 +1,11 @@
+carry on TAP-Vid davis (dev6, first, cotracker convention, cpu), 2026-10-14
+
+clip                       AJ  d_avg     OA   surv    MTE    N    T       s
+car-shadow               16.9   36.5   36.4   78.8   9.37   25   40     2.2
+drift-chicane            44.1   73.3   71.7   90.0   0.28   25   52     2.6
+camel                     6.8   19.0   13.1   81.8  18.10   10   90     3.4
+horsejump-high            0.4    2.0    2.0   20.1 106.50   25   50     2.7
+bmx-trees                 0.0    1.2   37.2   13.4 208.35   25   80     3.7
+breakdance                2.6   54.3   33.7   84.6   3.33   25   84     3.7
+
+mean over 6 clips: AJ 11.8  d_avg 31.1  OA 32.4   total 18.2 s

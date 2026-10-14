@@ -78,8 +78,11 @@ position is reported with its own visibility.
 | hybrid, s 21, Δ_0 80, similarity, gated | 71.9 | 85.1 | 91.5 |
 | hybrid, same, before the gate and the agreement rule | 71.4 | 84.4 | 91.5 |
 | hybrid, s 13, Δ_0 128, ungated | 54.5 | 74.4 | 83.6 |
+| certified carry alone, s 21, Δ_0 80, similarity | 11.8 | 31.1 | 32.4 |
 
-`out/bench_davis_hybrid-verify_*_dev6.txt`. On 34-104-frame clips the certificate changes
+`out/bench_davis_hybrid-verify_*_dev6.txt`, `out/bench_davis_carry_s21_d80_sim_dev6.txt`. The
+gated hybrid certifies 12 % of counted visible frames on these clips (car-shadow 17 %,
+drift-chicane 44 %, the three non-rigid clips under 3 %). On 34-104-frame clips the certificate changes
 nothing at the precise setting: where it fires the model was already right, and the
 agreement rule hands the sub-pixel position back to the model, which is the more accurate
 of the two there (on the rigid clips ours is closer 50-73 % of the time; on camel and
