@@ -52,11 +52,19 @@ class CertifiedTracker:
         self.keep_maps = keep_maps
 
     # ------------------------------------------------------------------ one clip
-    def run(self, frames, queries_txy: np.ndarray, oracle_xy: np.ndarray | None = None) -> dict:
+    def run(self, frames, queries_txy: np.ndarray, oracle_xy: np.ndarray | None = None,
+            proposals_xy: np.ndarray | None = None, proposals_vis: np.ndarray | None = None,
+            proposal_radius: int = 4) -> dict:
         """frames: (T, H, W) grey array, or an object with __len__ and frame(t) -> (H, W) grey.
 
         queries (N, 3) as (t, x, y).  oracle_xy (T, N, 2): if given, the search is replaced by
         the rounded oracle position (analysis of the certificate alone, never a tracker).
+
+        proposals_xy (T, N, 2) and proposals_vis (T, N): a frozen model's tracks.  The verify
+        mode: the template is also searched within +-proposal_radius of the model's position; a
+        certified match there (or at the carried prediction) is the output, with a proof; otherwise
+        the model's position is the output, flagged MODEL_HELD when the model says visible and
+        OCCLUDED when it does not.  The model never sees the certificate.
         """
         get = (lambda t: frames[t]) if isinstance(frames, np.ndarray) else frames.frame
         T_total = len(frames)
@@ -72,6 +80,11 @@ class CertifiedTracker:
         out_c = np.zeros((T_total, N), np.float32)
         out_k = np.zeros((T_total, N, 2), np.int32)
         out_delta = np.zeros((T_total, N, 2), np.float32)
+        out_source = np.zeros((T_total, N), np.uint8)   # 0 none, 1 carried prediction, 2 model proposal
+        use_prop = proposals_xy is not None
+        if use_prop:
+            proposals_xy = np.asarray(proposals_xy, np.float64)
+            proposals_vis = np.asarray(proposals_vis, bool) if proposals_vis is not None else np.ones(proposals_xy.shape[:2], bool)
 
         tmpl: Templates | None = None
         pos = np.zeros((N, 2))          # current template-centre pose (y, x), float
@@ -105,6 +118,17 @@ class CertifiedTracker:
                     if lost.any():
                         k[lost], _ = integer_search(Fp, pad, tmpl.T[idx[lost]], k0[lost], self.lost_radius)
                 k = self._clip(k, F.shape, h)
+                source = np.ones(len(idx), np.uint8)
+                if use_prop and oracle_xy is None:
+                    # a second candidate from the model's proposal; the better certificate score wins
+                    kp = self._clip(np.rint(proposals_xy[t, idx][:, ::-1] - tmpl.o[idx]).astype(int), F.shape, h)
+                    kp, _ = integer_search(Fp, pad, tmpl.T[idx], kp, proposal_radius)
+                    kp = self._clip(kp, F.shape, h)
+                    sc_a, _ = cert_score(crops_at(Fp, pad, k, h), tmpl.T[idx], self.deltas, self.offset)
+                    sc_b, _ = cert_score(crops_at(Fp, pad, kp, h), tmpl.T[idx], self.deltas, self.offset)
+                    take_b = sc_b < sc_a
+                    k = np.where(take_b[:, None], kp, k)
+                    source = np.where(take_b, 2, 1).astype(np.uint8)
                 delta = np.zeros((len(idx), 2))
                 point_shift = None       # (n, 2) where the query point lands relative to k, (y, x); None = delta + o
                 if self.interp:
@@ -142,18 +166,27 @@ class CertifiedTracker:
                         sb = sc[j[big]]; sb[acc] = sc2[acc]; sc[j[big]] = sb
                         cb = c[j[big]]; cb[acc] = c2[acc]; c[j[big]] = cb
                     delta[j] = d
-                new_pos = np.where(ok[:, None], k + delta, p_hat)
+                if use_prop and oracle_xy is None:
+                    # not certified: follow the model where it says visible, else carry the prediction
+                    pv = proposals_vis[t, idx]
+                    fallback = np.where(pv[:, None], proposals_xy[t, idx][:, ::-1] - tmpl.o[idx], p_hat)
+                    fallback_state = np.where(pv, states.MODEL_HELD, states.OCCLUDED)
+                else:
+                    fallback = p_hat
+                    fallback_state = np.full(len(idx), states.LOST)
+                new_pos = np.where(ok[:, None], k + delta, fallback)
                 # residual velocity after the camera, learned on certified steps only
                 moved = new_pos - (cam.predict(p_prev) if cam is not None else p_prev)
                 vel[idx] = np.where(ok[:, None], (1 - self.vel_alpha) * vel[idx] + self.vel_alpha * moved, 0.0)
                 pos[idx] = new_pos
-                out_state[t, idx] = np.where(ok, states.CERTIFIED, states.LOST)
+                out_state[t, idx] = np.where(ok, states.CERTIFIED, fallback_state)
                 out_score[t, idx] = sc
                 out_c[t, idx] = c
                 out_k[t, idx] = k
                 out_delta[t, idx] = delta
+                out_source[t, idx] = np.where(ok, source, 0)
                 if point_shift is not None:
-                    pt = np.where(ok[:, None], k + point_shift, p_hat + tmpl.o[idx])
+                    pt = np.where(ok[:, None], k + point_shift, fallback + tmpl.o[idx])
                 else:
                     pt = new_pos + tmpl.o[idx]
                 out_xy[t, idx] = pt[:, ::-1]
@@ -186,7 +219,7 @@ class CertifiedTracker:
             if self.keep_maps:
                 meta["selfmap"] = tmpl.selfmap
         return {"tracks": out_xy, "state": out_state, "score": out_score, "c": out_c, "k": out_k, "delta": out_delta,
-                "visible": out_state == states.CERTIFIED, "templates": meta,
+                "source": out_source, "visible": states.visible_from_state(out_state), "templates": meta,
                 "config": {"delta0": self.delta0, "radii": list(self.radii), "s": self.s, "R": self.R,
                            "offset": self.offset, "camera": self.use_camera, "refine": self.use_refine,
                            "interp": self.interp, "group": self.group}}

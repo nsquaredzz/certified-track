@@ -55,9 +55,11 @@ def run_frozen(tracker, clips: Iterable[Clip], query_mode: str = "first",
         s = queries_for(clip, query_mode)
         q = queries_txy(s)
         t0 = time.perf_counter()
-        tr, vi, log = tracker.track_clip(clip.frames, q)
+        res = tracker.track_clip(clip.frames, q)
         dt = time.perf_counter() - t0
-        m = score(clip, s, tr, vi, query_mode)
+        tr, vi, log = res[:3]
+        st = res[3] if len(res) > 3 else None
+        m = score(clip, s, tr, vi, query_mode, state_tn=st)
         m["seconds"] = round(dt, 3)
         m["calls"] = log.summary()
         per_clip[clip.name] = m

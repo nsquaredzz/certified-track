@@ -24,7 +24,11 @@ from certtrack.sets import SETS  # noqa: E402
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--method", default="cotracker", choices=["cotracker"])
+    ap.add_argument("--method", default="cotracker", choices=["cotracker", "carry", "hybrid-verify"])
+    ap.add_argument("--delta0", type=float, default=128.0)
+    ap.add_argument("--side", type=int, default=21)
+    ap.add_argument("--group", default="similarity", choices=["translation", "similarity", "affine"])
+    ap.add_argument("--interp", type=int, default=1)
     ap.add_argument("--data", default="davis", help="folder under data/tapvid/ made by prepare_tapvid.py")
     ap.add_argument("--set", default="dev6", choices=sorted(SETS))
     ap.add_argument("--clips", nargs="*", help="explicit clip names (overrides --set)")
@@ -35,13 +39,28 @@ def main():
     a = ap.parse_args()
 
     names = a.clips or SETS[a.set]
-    stem = a.out or f"bench_{a.data}_{a.method}_{a.set if not a.clips else 'custom'}"
+    tag = "" if a.method == "cotracker" else f"_s{a.side}_d{a.delta0:.0f}_{a.group[:3]}"
+    stem = a.out or f"bench_{a.data}_{a.method}{tag}_{a.set if not a.clips else 'custom'}"
+    from certtrack.models.cotracker import machine_info
+    info = machine_info()
     if a.method == "cotracker":
-        from certtrack.models.cotracker import CoTrackerStream, machine_info
+        from certtrack.models.cotracker import CoTrackerStream
         tracker = CoTrackerStream(device=a.device)
-        info = machine_info()
         info["device"] = tracker.device
         info["checkpoint"] = str(tracker.checkpoint.name)
+    elif a.method == "carry":
+        from certtrack.methods import CarryOnly
+        tracker = CarryOnly(delta0=a.delta0, s=a.side, group=a.group, interp=bool(a.interp))
+        info["device"] = "cpu"
+        info["tracker"] = tracker.kw
+    else:
+        from certtrack.methods import HybridVerify
+        from certtrack.models.cotracker import CoTrackerStream
+        model = CoTrackerStream(device=a.device)
+        tracker = HybridVerify(model, delta0=a.delta0, s=a.side, group=a.group, interp=bool(a.interp))
+        info["device"] = model.device
+        info["checkpoint"] = str(model.checkpoint.name)
+        info["tracker"] = tracker.kw
 
     def progress(name, m):
         print(f"{name:22s} {headline(m)}  surv {100*m['long']['survival']:.1f}  {m['seconds']:.1f} s", flush=True)

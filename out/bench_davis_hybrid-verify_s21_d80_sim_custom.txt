@@ -1,0 +1,6 @@
+hybrid-verify on TAP-Vid davis (dev6, first, cotracker convention, mps), 2026-10-14
+
+clip                       AJ  d_avg     OA   surv    MTE    N    T       s
+car-shadow               88.0   94.0   96.0  100.0   0.62   25   40     5.3
+
+mean over 1 clips: AJ 88.0  d_avg 94.0  OA 96.0   total 5.3 s

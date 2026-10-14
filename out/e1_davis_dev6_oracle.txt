@@ -1,0 +1,13 @@
+E1: certified fraction and proof precision, TAP-Vid davis dev6, oracle position, 2026-10-14
+
+  s   D0    radii offset i grp |  cert%  g1-5 g6-15 g16-30  g31+ falsevis |    w2    w4    w8  w4|S=0  w4|S>0 self0% kap0% |    AJ   ms/f
+ 13   80    1,2,3    opt 1 tra |   24.0  43.9  23.6   18.5  11.8      7.3 |  98.8 100.0 100.0   100.0   100.0   79.7   3.7 |  22.9   25.6
+ 13   80    1,2,3    opt 1 sim |   25.4  46.3  29.9   19.0  13.5      7.6 |  98.8 100.0 100.0   100.0   100.0   79.7   3.7 |  24.5   26.6
+ 13  128    1,2,3    opt 1 tra |   37.7  61.0  40.1   37.1  25.2     13.6 |  98.4 100.0 100.0   100.0   100.0   45.3  21.0 |  28.9   25.7
+ 13  128    1,2,3    opt 1 sim |   39.7  63.8  45.0   39.8  26.1     13.4 |  98.1 100.0 100.0   100.0   100.0   45.3  21.0 |  30.7   26.6
+ 21   80    1,2,3    opt 1 tra |   10.3  24.3  14.2    4.1   0.8      0.0 | 100.0 100.0 100.0   100.0   100.0   98.3   1.7 |  10.1   28.8
+ 21   80    1,2,3    opt 1 sim |   12.1  25.6  16.4    6.1   2.9      0.0 | 100.0 100.0 100.0   100.0   100.0   98.3   1.7 |  11.9   31.2
+ 21  128    1,2,3    opt 1 tra |   18.2  34.6  20.4   10.9  10.5     15.2 | 100.0 100.0 100.0   100.0   100.0   75.7   6.3 |  15.5   29.0
+ 21  128    1,2,3    opt 1 sim |   18.8  35.9  24.2   10.8  10.8     14.4 | 100.0 100.0 100.0   100.0   100.0   75.7   6.3 |  16.0   31.2
+
+cert%: certified share of counted frames with visible GT; g*: the same by gap from the query; falsevis: certified while GT occluded, of certified; w_k: certified steps within k px of GT; S=0: templates whose self-match set is {0} (no shift with |u|>=2 certifies).

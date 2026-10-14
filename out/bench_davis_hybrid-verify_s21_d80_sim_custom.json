@@ -1,0 +1,92 @@
+{
+ "method": "hybrid-verify",
+ "data": "davis",
+ "set": [
+  "car-shadow"
+ ],
+ "convention": "cotracker",
+ "machine": {
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.12.14",
+  "cpu": "Apple M4",
+  "torch": "2.14.1",
+  "mps": true,
+  "cuda": false,
+  "numpy": "2.5.4",
+  "device": "mps",
+  "checkpoint": "scaled_online.pth",
+  "tracker": {
+   "delta0": 80.0,
+   "s": 21,
+   "group": "similarity",
+   "interp": true
+  }
+ },
+ "per_clip": {
+  "car-shadow": {
+   "occlusion_accuracy": 0.96,
+   "pts_within_1": 0.7623497997329773,
+   "jaccard_1": 0.6074468085106383,
+   "pts_within_2": 0.9799732977303071,
+   "jaccard_2": 0.9446589446589446,
+   "pts_within_4": 0.9826435246995995,
+   "jaccard_4": 0.9496774193548387,
+   "pts_within_8": 0.9853137516688919,
+   "jaccard_8": 0.9496774193548387,
+   "pts_within_16": 0.9906542056074766,
+   "jaccard_16": 0.9496774193548387,
+   "average_jaccard": 0.8802276022468198,
+   "average_pts_within_thresh": 0.9401869158878506,
+   "long": {
+    "survival": 1.0,
+    "survival_16": 0.9384615384615383,
+    "mte": 0.6223132267506257,
+    "redetection_frames": 369,
+    "aj_rd": 0.9107368421052632,
+    "certified": {
+     "of_pred_visible": 0.1679790026246719,
+     "of_gt_visible": 0.17089452603471295,
+     "of_counted": 0.13128205128205128,
+     "false_visible": 0.0
+    },
+    "proof_precision": {
+     "n": 128,
+     "within_1": 0.9296875,
+     "within_2": 1.0,
+     "within_4": 1.0,
+     "within_8": 1.0,
+     "within_16": 1.0
+    }
+   },
+   "n_queries": 25,
+   "n_frames": 40,
+   "seconds": 5.266,
+   "calls": {
+    "windows": 4,
+    "query_windows": 100,
+    "frames_in": 64,
+    "wall_seconds": 2.799
+   }
+  }
+ },
+ "mean": {
+  "occlusion_accuracy": 0.96,
+  "pts_within_1": 0.7623497997329773,
+  "jaccard_1": 0.6074468085106383,
+  "pts_within_2": 0.9799732977303071,
+  "jaccard_2": 0.9446589446589446,
+  "pts_within_4": 0.9826435246995995,
+  "jaccard_4": 0.9496774193548387,
+  "pts_within_8": 0.9853137516688919,
+  "jaccard_8": 0.9496774193548387,
+  "pts_within_16": 0.9906542056074766,
+  "jaccard_16": 0.9496774193548387,
+  "average_jaccard": 0.8802276022468198,
+  "average_pts_within_thresh": 0.9401869158878506,
+  "n_queries": 25.0,
+  "n_frames": 40.0,
+  "seconds": 5.266
+ },
+ "seconds": 5.3,
+ "query_mode": "first"
+}
