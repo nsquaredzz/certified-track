@@ -34,10 +34,10 @@ class HybridVerify:
     (near the model's proposal or at the carried prediction), else the model's.
     """
 
-    def __init__(self, model, proposal_radius: int = 4, **tracker_kwargs):
+    def __init__(self, model, proposal_radius: int = 4, snap_tol: float = 2.0, gate_self: bool = True, **tracker_kwargs):
         self.model = model
         self.kw = tracker_kwargs
-        self.proposal_radius = proposal_radius
+        self.proposal_radius, self.snap_tol, self.gate_self = proposal_radius, snap_tol, gate_self
         self.name = f"hybrid-verify({model.name})"
         self.last = None
 
@@ -45,7 +45,8 @@ class HybridVerify:
         tr_m, vi_m, log = self.model.track_clip(frames, queries_txy)
         g = grey(frames)
         r = CertifiedTracker(**self.kw).run(g, queries_txy, proposals_xy=tr_m, proposals_vis=vi_m,
-                                            proposal_radius=self.proposal_radius)
+                                            proposal_radius=self.proposal_radius, snap_tol=self.snap_tol,
+                                            gate_self=self.gate_self)
         r["model_tracks"], r["model_visible"] = tr_m, vi_m
         self.last = r
         return r["tracks"], r["visible"], log, r["state"]

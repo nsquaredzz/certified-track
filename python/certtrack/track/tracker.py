@@ -54,7 +54,7 @@ class CertifiedTracker:
     # ------------------------------------------------------------------ one clip
     def run(self, frames, queries_txy: np.ndarray, oracle_xy: np.ndarray | None = None,
             proposals_xy: np.ndarray | None = None, proposals_vis: np.ndarray | None = None,
-            proposal_radius: int = 4) -> dict:
+            proposal_radius: int = 4, snap_tol: float = 2.0, gate_self: bool = True) -> dict:
         """frames: (T, H, W) grey array, or an object with __len__ and frame(t) -> (H, W) grey.
 
         queries (N, 3) as (t, x, y).  oracle_xy (T, N, 2): if given, the search is replaced by
@@ -65,6 +65,12 @@ class CertifiedTracker:
         certified match there (or at the carried prediction) is the output, with a proof; otherwise
         the model's position is the output, flagged MODEL_HELD when the model says visible and
         OCCLUDED when it does not.  The model never sees the certificate.
+
+        Position policy in verify mode (Theorem P: a certificate bounds position only through the
+        template's self-match set): when the certified position and the model's agree within
+        snap_tol px the model's sub-pixel position is reported under the certificate; when they
+        disagree, the certified position is reported only for templates whose self-match set is
+        {0} (gate_self), otherwise the step is MODEL_HELD and the model's position stands.
         """
         get = (lambda t: frames[t]) if isinstance(frames, np.ndarray) else frames.frame
         T_total = len(frames)
@@ -80,7 +86,7 @@ class CertifiedTracker:
         out_c = np.zeros((T_total, N), np.float32)
         out_k = np.zeros((T_total, N, 2), np.int32)
         out_delta = np.zeros((T_total, N, 2), np.float32)
-        out_source = np.zeros((T_total, N), np.uint8)   # 0 none, 1 carried prediction, 2 model proposal
+        out_source = np.zeros((T_total, N), np.uint8)   # 0 none, 1 carried prediction, 2 model proposal, 3 certified but not unique
         use_prop = proposals_xy is not None
         if use_prop:
             proposals_xy = np.asarray(proposals_xy, np.float64)
@@ -169,8 +175,23 @@ class CertifiedTracker:
                 if use_prop and oracle_xy is None:
                     # not certified: follow the model where it says visible, else carry the prediction
                     pv = proposals_vis[t, idx]
-                    fallback = np.where(pv[:, None], proposals_xy[t, idx][:, ::-1] - tmpl.o[idx], p_hat)
+                    model_centre = proposals_xy[t, idx][:, ::-1] - tmpl.o[idx]
+                    # the model's position is reported whether or not it calls the point visible
+                    # (its guess beats a camera-carried one); the carried state below stays independent
+                    fallback = model_centre
                     fallback_state = np.where(pv, states.MODEL_HELD, states.OCCLUDED)
+                    # certified: the model's position stands when it agrees; a snap needs a unique template
+                    ours_centre = k + delta if point_shift is None else k + point_shift - tmpl.o[idx]
+                    dist = np.sqrt(((ours_centre - model_centre) ** 2).sum(1))
+                    agree = ok & pv & (dist <= snap_tol)
+                    unique = (tmpl.n_self[idx] == 0) if gate_self else np.ones(len(idx), bool)
+                    snap = ok & ~agree & unique
+                    distrust = ok & ~agree & ~unique
+                    ok = agree | snap
+                    delta = np.where(agree[:, None], model_centre - k, delta)
+                    if point_shift is not None:
+                        point_shift = np.where(agree[:, None], model_centre + tmpl.o[idx] - k, point_shift)
+                    out_source[t, idx] = np.where(distrust, 3, out_source[t, idx])   # 3: certified elsewhere, not unique
                 else:
                     fallback = p_hat
                     fallback_state = np.full(len(idx), states.LOST)
@@ -178,13 +199,14 @@ class CertifiedTracker:
                 # residual velocity after the camera, learned on certified steps only
                 moved = new_pos - (cam.predict(p_prev) if cam is not None else p_prev)
                 vel[idx] = np.where(ok[:, None], (1 - self.vel_alpha) * vel[idx] + self.vel_alpha * moved, 0.0)
-                pos[idx] = new_pos
+                # the carried state: certified position, else the camera-carried prediction (not the model's)
+                pos[idx] = np.where(ok[:, None], k + delta, p_hat)
                 out_state[t, idx] = np.where(ok, states.CERTIFIED, fallback_state)
                 out_score[t, idx] = sc
                 out_c[t, idx] = c
                 out_k[t, idx] = k
                 out_delta[t, idx] = delta
-                out_source[t, idx] = np.where(ok, source, 0)
+                out_source[t, idx] = np.where(ok, source, out_source[t, idx])
                 if point_shift is not None:
                     pt = np.where(ok[:, None], k + point_shift, fallback + tmpl.o[idx])
                 else:

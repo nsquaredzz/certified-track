@@ -1,0 +1,11 @@
+hybrid-verify on TAP-Vid davis (dev6, first, cotracker convention, mps), 2026-10-14
+
+clip                       AJ  d_avg     OA   surv    MTE    N    T       s
+car-shadow               87.9   93.9   96.0  100.0   0.63   25   40     8.5
+drift-chicane            42.6   83.6   59.0  100.0   0.24   25   52    11.1
+camel                    71.4   80.6   99.5  100.0   1.17   10   90    19.5
+horsejump-high           71.3   79.8   96.1   96.5   1.16   25   50    16.0
+bmx-trees                51.3   74.9   74.3   93.4   1.47   25   80    23.8
+breakdance               71.9   82.7   92.5   89.0   1.10   25   84    31.7
+
+mean over 6 clips: AJ 66.1  d_avg 82.6  OA 86.2   total 110.6 s
