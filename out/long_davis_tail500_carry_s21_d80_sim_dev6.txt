@@ -1,0 +1,11 @@
+carry on tail x 500 of TAP-Vid davis (dev6), 2026-10-14
+
+clip                       AJ  d_avg     OA surv50 surv16    MTE   AJrd  cert%     w4 mid<16 end<16       s
+car-shadow               15.7   33.4   29.2   65.2   23.5  10.15   23.1   16.0  100.0   45.5   68.2    25.4
+drift-chicane             8.4   55.7   70.4   84.6   80.2   1.13    3.0    8.4  100.0   40.0   76.9    23.5
+camel                     4.1   12.7   11.5   72.1   24.0  19.52    1.1   10.2   48.3   60.0   50.0    19.4
+horsejump-high            0.2    0.4    3.2    1.9    0.5 129.97    0.2    0.2  100.0    0.0    0.0    24.4
+bmx-trees                 0.1    0.5   44.9    5.5    0.4 262.35    0.1    0.1  100.0    0.0    4.5    21.2
+breakdance                0.6   51.8   36.4   80.7   73.6   3.82    0.4    0.7  100.0   93.8  100.0    20.1
+
+mean over 6 clips: AJ 4.8  d_avg 25.8  OA 32.6  survival 51.6 (16 px: 33.7)  MTE 71.16  AJ_RD 4.6  certified 5.9 %  end<16 49.9 %   total 134.1 s

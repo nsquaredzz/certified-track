@@ -93,12 +93,47 @@ then bouncing inside the last two thirds, so the frames around the query never r
 ground truth is exact by index. Real footage, artificial time order; it tests drift and
 repeated occlusion, not new content.
 
-| method, tail-500, dev-6 | AJ | δ_avg | OA | survival 50 px | survival 16 px | MTE | AJ_RD | end within 16 px |
-|---|---|---|---|---|---|---|---|---|
-| CoTracker3 alone | 60.5 | 80.1 | 83.7 | 96.1 | 94.1 | 1.16 | 69.4 | 99.3 |
+| method, tail-500, dev-6 | AJ | δ_avg | OA | survival 50 px | survival 16 px | MTE | AJ_RD | certified | within 4 px | end within 16 px |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CoTracker3 alone | 60.5 | 80.1 | 83.7 | 96.1 | 94.1 | 1.16 | 69.4 | 0 % | | 99.3 |
+| hybrid, s 21, Δ_0 80, similarity, gated | 60.5 | 80.1 | 83.7 | 96.1 | 94.1 | 1.16 | 69.4 | 5.0 % | 100 % | 99.3 |
+| certified carry alone | 4.8 | 25.8 | 32.6 | 51.6 | 33.7 | 71.2 | 4.6 | 5.9 % | 91 % | 49.9 |
 
-`out/long_davis_tail500_cotracker_dev6.txt`. CoTracker3 does not drift on these sequences:
-after 500 frames 99 % of visible points are within 16 px and the median error is 1.2 px. What
-it loses over long video is visibility: OA falls from 91.5 to 83.7 (drift-chicane 58.7,
-bmx-trees 68.1) and re-detection AJ sits at 57-72. If the certificate has a role here it is
-on the visibility flag, in the one direction the theorem allows: certified implies present.
+`out/long_davis_tail500_{cotracker,hybrid-verify_s21_d80_sim,carry_s21_d80_sim}_dev6.txt`;
+proof videos `out/proof_tail500_hybrid_{car-shadow,drift-chicane}.mp4`.
+
+CoTracker3 does not drift on these sequences: after 500 frames 99 % of visible points are
+within 16 px and the median error is 1.2 px. What it loses over long video is visibility: OA
+falls from 91.5 to 83.7 (drift-chicane 58.7, bmx-trees 68.1) and re-detection AJ sits at
+57-72. The hybrid reproduces every one of its numbers to the decimal. The certificate fires on
+5 % of counted frames (16 % on car-shadow, 8 % on drift-chicane, under 1 % on the three
+non-rigid clips), every certified step is within 4 px of the truth, and not one of them lands
+on a frame where the model was wrong: the frames the model gets wrong are the frames whose
+appearance has left the group the certificate can explain, so the certificate cannot fire
+there. The one direction the theorem allows for visibility, certified implies present, never
+contradicts the model on this footage.
+
+The certified tracker on its own, for the record, is not a tracker (AJ 4.8): once a point
+is lost nothing but the camera prior carries it.
+
+### Verdict against the plan's decision rule (2026-10-14)
+
+- E1: the precise certificate covers 10-12 % of visible frames and 1-4 % past gap 30; the 15 %
+  floor is missed. Not a tracker.
+- E2: the self-match gate gives 97-100 % precision within 4 px at every setting. The flag means
+  what it says.
+- E5: zero gain on short clips.
+- E6: zero gain on 500-frame palindromes; the wrapped model does not drift there, and where it
+  errs the certificate is silent.
+- The compute axis was not run: with the certificate firing on 5-10 % of frames, gating a
+  model whose encoder runs every frame cannot save more than that.
+
+The reason is structural, not a tuning matter. CoTracker3 is itself anchored to the query
+frame (each track carries the feature sampled at its query), so it does not drift as long as
+the appearance stays within what its features recognise, which is a far larger set than what a
+raw-pixel template modulo translation, similarity or affine warp and one brightness offset can
+certify. Both fail in the same regime, permanent appearance change; the certificate fails first.
+What survives is a precise, sparse, checkable flag with a theorem behind it, the exact
+brightness offset for the multi-scale test, the self-match set as the position-error object,
+and a clean negative result on where raw-pixel certificates stand relative to a learned
+tracker. That is a note, not a tracker paper.
