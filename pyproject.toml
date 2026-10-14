@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "certtrack"
+version = "0.0.1"
+description = "Certified Anchored Tracking: point tracks with a per-step certificate against the query-frame template"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "pillow>=10", "certskip>=0.1"]
+
+[project.optional-dependencies]
+model = ["torch>=2.2", "torchvision", "einops", "timm", "tqdm"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
