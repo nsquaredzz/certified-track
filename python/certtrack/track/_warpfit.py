@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import numpy as np
 
+_SNAP = 1e-6
+
 def apply_h(G: np.ndarray, x: np.ndarray, y: np.ndarray):
     """Apply a 3x3 homography to pixel coordinates. Returns (u, v)."""
     u = G[0, 0] * x + G[0, 1] * y + G[0, 2]
