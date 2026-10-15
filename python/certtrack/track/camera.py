@@ -7,7 +7,7 @@ window and nothing else.
 from __future__ import annotations
 
 import numpy as np
-from certskip.warpcert import fit_global
+from ._warpfit import fit_global
 
 
 class CameraPrior:

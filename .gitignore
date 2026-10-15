@@ -6,7 +6,7 @@ __pycache__/
 *.egg-info/
 
 # datasets, weights, third-party checkouts and cached runs: fetched by scripts/, never committed
-data/
+/data/
 
 # rendered videos: regenerate them with scripts/render_proof.py
 out/*.mp4
