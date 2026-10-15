@@ -57,7 +57,9 @@ single-point protocol gives 63.8).
 ## Reproduce
 
 ```
-python3.12 -m venv .venv && .venv/bin/pip install -e ../certified-skip -e '.[dev,model]'
+python3.12 -m venv .venv && .venv/bin/pip install numpy pillow pytest torch torchvision einops timm tqdm
+.venv/bin/pip install --no-deps -e .
+export PYTHONPATH=../certified-skip/python      # certified-skip is used from its checkout
 .venv/bin/python scripts/fetch_data.py            # TAP-Vid DAVIS 1.67 GB, RGB-Stacking 187 MB, SHA-256 checked
 .venv/bin/python scripts/fetch_weights.py         # CoTracker3 weights 2 x 100 MB, pinned source checkout
 .venv/bin/python scripts/prepare_tapvid.py        # per-clip files at 256x256
